@@ -1,0 +1,220 @@
+//#pragma once
+
+#ifndef SET_
+#define SET_
+#include"bst.hpp"
+#include <vector>
+#include <queue>
+#include <iostream>
+#include<functional>
+using namespace std;
+template <typename T>
+class Set
+{
+private:
+    // drzewo BST
+    BST<T> bst_;
+
+public:
+    Set();
+    Set(const Set<T>& source);
+    Set<T>& operator=(const Set<T>& source)
+    {
+        BST<T>::deleted(bst_);
+//			BST<T>::copyd(source.bst_, bst_);
+        bst_ = source.bst_;
+        return *this;
+    };
+    Set(Set<T>&& source);
+    Set<T>& operator=(Set<T>&& source)
+    {
+        BST<T>::deleted(bst_);
+        bst_ = move(source.bst_);
+        return *this;
+    };
+    ~Set();
+
+
+public:
+    // iterator, który jest jednocześnie cost_iterator-em
+    class Iterator : public iterator<input_iterator_tag, const T>
+    {
+    public:
+        typename BST<T>::iterator i;
+        Iterator() : i(i) {}
+
+        Iterator(typename BST<T>::iterator i) :i(i)  {}
+
+        bool operator==(const Iterator &it) const
+        {
+            return this->i==it.i;
+        };
+        bool operator!=(const Iterator &it) const
+        {
+            return this->i!=it.i;
+        }
+        Iterator& operator++()
+        {
+            ++i;
+            return *this;
+        };
+        Iterator operator++(int)
+        {
+            Iterator it(i++);
+            return it;
+        };
+
+        const T& operator*() const
+        {
+            return i.temp->x;
+        };
+        const T* operator->() const
+        {
+            return &(i.temp->x);
+        };
+        // operator zwracający true jeżeli iterator "wskazuje" na istniejący element, false w przeciwnym przypadku
+        operator bool() const
+        {
+            if (i.temp!= nullptr) return true;
+            else return false;
+        };
+    };
+
+    // dodaje element - zwraca iterator do dodanego elementu i true, lub iterator do istniejącego elementu i false, jeżeli z jakiegoś powodu nie udało się dodać/znaleźć to zwraca false i to samo co end()
+    pair<Iterator, bool> insert(const T &value)
+    {
+
+        if (bst_.find(value) == nullptr)
+        {
+            bst_.push(value);
+            Iterator it(bst_.find(value));
+            pair <Iterator, bool> pa(it, true);
+            return pa;
+        }
+        if (bst_.find(value) != nullptr) {
+            Iterator it(bst_.find(value));
+            pair <Iterator, bool> pa(it, false);
+            return pa;
+        }
+        else {
+            pair <Iterator, bool> pa(bst_.getmax(), false);
+            return pa;
+        }
+        //	return pa;
+
+        //	return &value;
+    };
+
+    // +-wyszukuje element o podanej wartości - jeżeli element został znaleziony to zwraca iterator do wyszukanego elementu, jeżeli nie to zwraca to samo co end()
+    Iterator find(const T &value) const
+    {
+        if (bst_.find(value) != nullptr)
+        {
+            Iterator it(bst_.find(value));
+            //		return &value;
+            return it;
+
+        }
+            //	else return nullptr;
+        else return end();
+
+    };
+
+
+    // zwraca iterator na pierwszy element
+    Iterator begin() const
+    {
+        Iterator it(bst_.getmin());
+        return it;
+    }
+
+    // zwraca iterator "za ostatni" element
+    Iterator end() const
+    {
+        Iterator it(bst_.getmax());
+        return it;
+    }
+
+    // zwraca ilość elementów
+    size_t size() const { return bst_.size(); };//++
+    // zwraca true gdy zbiór jest pusty, lub false w innym przypadku
+    bool empty() const { return bst_.size() > 0; }; //++
+
+
+    // dodaje element - zwraca adres dodanego, lub istniejącego elementu
+    const T* insert1(const T& value);//++
+
+
+    // wyszukuje element o podanej wartości - jeżeli element został znaleziony to zwraca wskaźnik do wyszukanego elementu, jeżeli nie to zwraca nullptr
+    const T* find1(const T& value) const;//++
+
+    void print() { bst_.print(); };
+
+    // usuwa element o podanej wartości - jeżeli element został usunięty to zwraca true, jeżeli elementu o podanej wartości nie udało się odnaleźć to zwraca false;
+    bool remove(const T& value);//++
+
+    // wykonuje f na każdym elemencie zbioru w kolejności inorder
+    void inorder(function<void(const T&)> f) const;
+};
+template <typename T>
+Set<T>::Set()
+{
+
+}
+template <typename T>
+Set<T>::~Set()
+{
+
+
+}
+template <typename T>  //copy
+Set<T>::Set(const Set<T>& source)
+{
+    BST<T>::copyd(source.bst_, bst_);
+}
+template <typename T>  //move!!!!
+Set<T>::Set(Set<T>&& source)
+{
+    this->bst_ = move(source.bst_);
+}
+template <typename T>
+const T* Set<T>::insert1(const T& value)//!!
+{
+    if (bst_.find(value) == nullptr) { bst_.push(value); }
+    return &value;
+
+}
+template <typename T>  //++
+const T* Set<T>::find1(const T& value) const
+{
+    if (bst_.find(value) != nullptr)
+    {
+
+        return &value;
+    }
+    else return nullptr;
+
+}
+template <typename T>  //!!!
+bool Set<T>::remove(const T& value)
+{
+    if (bst_.find(value) != nullptr)
+    {
+        bst_.deletezn(value);
+        return true;
+    }
+    else return false;
+}
+template <typename T>
+void Set<T>::inorder(function<void(const T&)> f) const
+{
+    bst_.in_order(bst_.root, f);
+};
+//template<typename T>
+//void printSetSizeAndElems(const Set<T>& s)
+//{
+//	cout << "Size: " << s.size() << endl;
+//	s.inorder([](const T& e) { cout << e << ", "; });
+//	cout << endl;
+//}
+#endif
